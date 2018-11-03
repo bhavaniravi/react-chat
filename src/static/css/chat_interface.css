@@ -14,7 +14,6 @@ body {
   height: 500px;
   border-radius: 10px;
   background-color: #fff;
-  left: 50%;
   top: 50%;
   /*transform: translateX(-50%) translateY(-50%);*/
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
