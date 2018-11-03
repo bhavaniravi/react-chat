@@ -1,60 +1,24 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
-import './static/css/chat_interface.css' 
-// import './static/css/style.css'
-import './static/css/temporary.css'
-
+import './static/css/chat_interface.css';
+import './static/css/temporary.css';
 
 class SendButton extends Component{
-  get_message_and_create_bot_message_component(message){
-
-  }
-
-  handleClick() {
-    console.log("Clicked");
-  }
-
     render(){
-      return (<div className="send_message" onClick={this.handleClick}>
+      return (<div className="send_message" onClick={this.props.handleClick}>
                 <div className="text">send</div>
               </div>);
     }
 }
 
-class MessageTextBox extends Component{
-  get_message_and_create_bot_message_component(){
-
-
-  }
-  
-  constructor(props){
-    super(props);
-    this.state = {
-      message: this.props.message
-    };
-  }
-
-  _handleKeyPress(e) {
-    if (e.key === 'Enter') {
-      this.state.message = e.target.value;
-      this.get_message_and_create_bot_message_component()
-    }
-  }
-
-  render(){
-      return(
-            <input id="msg_input" className="message_input" placeholder="Type your messages here..." onKeyPress={this._handleKeyPress}/>
-      );
-  }
-}
-
 class MessageTextBoxContainer extends Component{
   render(){
     return(
-    <div className="message_input_wrapper">
-      <MessageTextBox></MessageTextBox>
-    </div>);
+      <div className="message_input_wrapper">
+        <input id="msg_input" className="message_input" placeholder="Type your messages here..." value={this.props.message} onChange={this.props.onChange} onKeyPress={this.props._handleKeyPress}/>
+      </div>
+    );
   }
 }
 
@@ -69,17 +33,29 @@ class Avartar extends Component {
 class BotMessageBox extends Component{
   constructor(props) {
     super(props);
-
-    this.state = {
-      message: this.props.message
-    };
   }
   render(){
     return(
       <li className="message left appeared">
         <Avartar></Avartar>
         <div className="text_wrapper">
-            <div className="text">{this.state.message}</div>
+            <div className="text">{this.props.message}</div>
+        </div>
+      </li>
+    );
+  }
+}
+
+class UserMessageBox extends Component{
+  constructor(props) {
+    super(props);
+  }
+  render(){
+    return(
+      <li className="message right appeared">
+        <Avartar></Avartar>
+        <div className="text_wrapper">
+            <div className="text">{this.props.message}</div>
         </div>
       </li>
     );
@@ -89,24 +65,17 @@ class BotMessageBox extends Component{
 class MessagesContainer extends Component{
   constructor(props) {
     super(props);
-    if(this.props.messages == undefined){
-      this.state = {messages: Array()}
-    }
-    else{
-      this.state = { messages: this.props.messages}
-    }
-
-    
+    this.createBotMessages = this.createBotMessages.bind(this);
   }
+
   createBotMessages(){
-    let comps = Array()
-    for(let i=0; i<this.state.messages.length; i++){
-      let current_prop = {"message": this.state.messages[i]}
-      comps.push(React.CreateElement(BotMessageBox, current_prop))
-    }
+    return this.props.messages.map((message, index) =>
+       <UserMessageBox key={index} message={message}/>
+    );
   }
 
   render(){
+
     return(
       <ul className="messages">
         {this.createBotMessages()}
@@ -117,13 +86,81 @@ class MessagesContainer extends Component{
 
 
 class ChatApp extends Component {
+  constructor(props){
+    super(props);
+    this.state = {"messages": [], "current_message":""}
+    this.handleClick = this.handleClick.bind(this);
+    this._handleKeyPress = this._handleKeyPress.bind(this);
+    this.onChange = this.onChange.bind(this);
+    this.addMessageBox = this.addMessageBox.bind(this);
+  }
+  
+
+  addMessageBox(enter=true){
+    let messages = this.state.messages;
+    let current_message = this.state.current_message;
+    console.log(this.state);
+    if(current_message && enter){
+      messages = [...messages, current_message];
+      current_message = ""
+    }  
+
+     fetch("localhost:5000")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          this.setState({
+            isLoaded: true,
+            items: result.items
+          });
+        },
+        // Note: it's important to handle errors here
+        // instead of a catch() block so that we don't swallow
+        // exceptions from actual bugs in components.
+        (error) => {
+          this.setState({
+            isLoaded: true,
+            error
+          });
+        }
+      )
+    
+
+    this.setState({
+      current_message: current_message,
+      messages
+    });
+
+  }
+
+  handleClick(){
+    this.addMessageBox();
+  }
+
+  onChange(e) {
+    this.setState({
+      current_message: e.target.value
+    });  
+  }
+
+    _handleKeyPress(e) {
+    let enter_pressed = false;
+    if(e.key === "Enter"){
+      enter_pressed = true;
+    }
+    this.addMessageBox(enter_pressed)
+  }
+
   render() {
     return (
       <div className="chat_window">
-        <MessagesContainer></MessagesContainer>
+        <MessagesContainer messages={this.state.messages}></MessagesContainer>
         <div className="bottom_wrapper clearfix">
-          <MessageTextBoxContainer></MessageTextBoxContainer>
-          <SendButton></SendButton>
+          <MessageTextBoxContainer 
+            _handleKeyPress={this._handleKeyPress} 
+            onChange={this.onChange} 
+            message={this.state.current_message}></MessageTextBoxContainer>
+          <SendButton handleClick={this.handleClick}></SendButton>
         </div>
         
       </div>
