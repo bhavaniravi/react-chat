@@ -49,10 +49,11 @@ class BotMessageBox extends Component{
 class UserMessageBox extends Component{
   constructor(props) {
     super(props);
+
   }
   render(){
     return(
-      <li className="message right appeared">
+      <li className={`message ${this.props.appearance} appeared`}>
         <Avartar></Avartar>
         <div className="text_wrapper">
             <div className="text">{this.props.message}</div>
@@ -68,16 +69,30 @@ class MessagesContainer extends Component{
     this.createBotMessages = this.createBotMessages.bind(this);
   }
 
+  scrollToBottom = () => {
+    var el = this.refs.scroll;
+    el.scrollTop = el.scrollHeight;
+  }
+
+  componentDidMount() {
+    this.scrollToBottom();
+  }
+
+  componentDidUpdate() {
+    this.scrollToBottom();
+  }
+
   createBotMessages(){
+    console.log(this.props.messages);
     return this.props.messages.map((message, index) =>
-       <UserMessageBox key={index} message={message}/>
+       <UserMessageBox key={index} message={message["message"]} appearance={message["isbotmessage"] ? "left": "right"}/>
     );
   }
 
   render(){
 
     return(
-      <ul className="messages">
+      <ul className="messages" ref="scroll">
         {this.createBotMessages()}
       </ul>
     );
@@ -101,31 +116,22 @@ class ChatApp extends Component {
     let current_message = this.state.current_message;
     console.log(this.state);
     if(current_message && enter){
-      messages = [...messages, current_message];
-      current_message = ""
-    }  
-
-     fetch("localhost:5000")
+      messages = [...messages, {"message":current_message}];
+      fetch("http://localhost:5000?message=" + current_message)
       .then(res => res.json())
       .then(
         (result) => {
+          console.log(result);
           this.setState({
-            isLoaded: true,
-            items: result.items
+            messages: [...messages, {"message":result["message"], "isbotmessage":true}]
           });
         },
-        // Note: it's important to handle errors here
-        // instead of a catch() block so that we don't swallow
-        // exceptions from actual bugs in components.
         (error) => {
-          this.setState({
-            isLoaded: true,
-            error
-          });
+          //do nothing for now
         }
-      )
-    
-
+      );
+      current_message = ""
+    }  
     this.setState({
       current_message: current_message,
       messages

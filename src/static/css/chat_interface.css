@@ -19,7 +19,7 @@ body {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
   background-color: #f8f8f8;
   overflow: hidden;
-  height: 100%;
+  height: calc(100vh - 120px);
 }
 
 .top_menu {
@@ -60,7 +60,7 @@ body {
   list-style: none;
   padding: 20px 10px 0 10px;
   margin: 0;
-  height: 70%;
+  height: calc(100vh - 250px);
   overflow: scroll;
 }
 .messages .message {
@@ -101,6 +101,12 @@ body {
 .messages .message.right .text {
   color: #45829b;
 }
+
+.messages .message.left .text {
+    color: black;
+    font-weight: inherit;
+}
+
 .messages .message.appeared {
   opacity: 1;
 }
@@ -192,4 +198,8 @@ body {
 
 .message_template {
   display: none;
+}
+
+#msg_input{
+    color: black;
 }
